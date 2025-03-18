@@ -1,5 +1,7 @@
 ﻿using tabuleiro;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using System;
 
 namespace xadrez
 {
@@ -12,6 +14,7 @@ namespace xadrez
         public bool Terminada { get; private set; }
         private HashSet<Peca> pecas;
         private HashSet<Peca> capturadas;
+        public bool xeque { get; private set; }
 
         public PartidaDeXadrez()
         {
@@ -48,7 +51,7 @@ namespace xadrez
             }
         }
 
-        public void ExecutarMovimento(Posicao origem, Posicao destino)
+        public Peca ExecutarMovimento(Posicao origem, Posicao destino)
         {
             Peca p = tab.RetirarPeca(origem);
             p.IncrementarQteMovimentos();
@@ -58,14 +61,41 @@ namespace xadrez
             {
                 capturadas.Add(pecaCapturada);
             }
+            return pecaCapturada;
+        }
+
+        private void DesfazMovimento(Posicao origem, Posicao destino, Peca pecaCapturada)
+        {
+            Peca p = tab.RetirarPeca(destino);
+            p.DecrementarQteMovimentos();
+            if (pecaCapturada != null)
+            {
+                tab.ColocarPeca(pecaCapturada, destino);
+                capturadas.Remove(pecaCapturada);
+            }
+            tab.ColocarPeca(p, origem);
         }
 
         public void RealizaJogada(Posicao origem, Posicao destino)
         {
-            ExecutarMovimento(origem, destino);
+            Peca pecaCapturada = ExecutarMovimento(origem, destino);
+            if (EstaEmXeque(jogadorAtual))
+            {
+                DesfazMovimento(origem, destino, pecaCapturada);
+                throw new TabuleiroException("Você não pode ficar em xeque!");
+            }
+
+            if (EstaEmXeque(Adversaria(jogadorAtual)))
+            {
+                xeque = true;
+            }
+            else { xeque = false; }
+
             turno++;
             MudaJogador();
         }
+
+
 
         private void MudaJogador()
         {
@@ -105,6 +135,48 @@ namespace xadrez
             return aux;
         }
 
+        public bool EstaEmXeque(Cor cor)
+        {
+            Peca R = this.Rei(cor);
+            if (R == null)
+            {
+                throw new TabuleiroException("Não tem Rei da cor: " + cor + " no tabuleiro");
+            }
+            foreach (Peca x in PecasEmJogo(Adversaria(cor)))
+            {
+                bool[,] mat = x.MovimentosPossiveis();
+                if (mat[R.Posicao.Linha, R.Posicao.Coluna])
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private Peca Rei(Cor cor)
+        {
+            foreach (Peca x in PecasEmJogo(cor))
+            {
+                if (x is Rei)
+                {
+                    return x;
+                }
+            }
+            return null;
+        }
+
+        private Cor Adversaria(Cor cor)
+        {
+            if (cor == Cor.Branca)
+            {
+                return Cor.Preta;
+            }
+            else
+            {
+                return Cor.Branca;
+            }
+        }
+
         public void ColocarNovaPeca(char coluna, int linha, Peca peca)
         {
             tab.ColocarPeca(peca, new PosicaoXadrez(coluna, linha).ToPosicao());
@@ -119,7 +191,7 @@ namespace xadrez
             ColocarNovaPeca('d', 2, new Torre(tab, Cor.Branca));
             ColocarNovaPeca('e', 2, new Torre(tab, Cor.Branca));
             ColocarNovaPeca('e', 1, new Torre(tab, Cor.Branca));
-            ColocarNovaPeca('d', 1, new Torre(tab, Cor.Branca));
+            ColocarNovaPeca('d', 1, new Rei(tab, Cor.Branca));
 
 
             ColocarNovaPeca('c', 7, new Torre(tab, Cor.Preta));
@@ -127,7 +199,7 @@ namespace xadrez
             ColocarNovaPeca('d', 7, new Torre(tab, Cor.Preta));
             ColocarNovaPeca('e', 7, new Torre(tab, Cor.Preta));
             ColocarNovaPeca('e', 8, new Torre(tab, Cor.Preta));
-            ColocarNovaPeca('d', 8, new Torre(tab, Cor.Preta));
+            ColocarNovaPeca('d', 8, new Rei(tab, Cor.Preta));
 
 
         }
