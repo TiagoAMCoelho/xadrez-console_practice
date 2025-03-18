@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using tabuleiro;
 using xadrez;
@@ -10,6 +11,40 @@ namespace xadrez_console
 
         private static ConsoleColor _fundoOriginal = ConsoleColor.Black;
         private static ConsoleColor _fundoAlterado = ConsoleColor.Green;
+
+        public static void ImprimirPartida(PartidaDeXadrez partida)
+        {
+            ImprimirTabuleiro(partida.tab);
+            Console.WriteLine();
+            ImprimirPecasCapturadas(partida);
+            Console.WriteLine();
+            Console.WriteLine("Turno: " + partida.turno);
+            Console.WriteLine("Aguarda jogada: " + partida.jogadorAtual);
+        }
+
+        private static void ImprimirPecasCapturadas(PartidaDeXadrez partida)
+        {
+            Console.WriteLine("Peças capturadas:");
+            Console.Write("Brancas: ");
+            ImprimirConjunto(partida.PecasCapturadas(Cor.Branca));
+            Console.WriteLine();
+            Console.Write("Pretas: ");
+            ConsoleColor aux = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            ImprimirConjunto(partida.PecasCapturadas(Cor.Preta));
+            Console.ForegroundColor = aux;
+        }
+
+        private static void ImprimirConjunto(HashSet<Peca> pecas)
+        {
+            Console.Write("[");
+            foreach (Peca peca in pecas)
+            {
+                Console.Write(peca + " ");
+            }
+            Console.Write("]");
+        }
+
         public static void ImprimirTabuleiro(Tabuleiro tab)
         {
             for (int i = 0; i < tab.Linhas; i++)
