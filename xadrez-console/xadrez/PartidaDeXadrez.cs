@@ -32,7 +32,11 @@ namespace xadrez
         }
 
         public void ValidarPosicaoDeOrigem(Posicao pos)
-        {
+        {   
+            if((pos.Linha < 0 || pos.Linha > Tab.Linhas) || (pos.Coluna < 0 || pos.Coluna > Tab.Colunas))
+            {
+                throw new TabuleiroException("Posição inválida!");
+            }
             if (Tab.Peca(pos) == null)
             {
                 throw new TabuleiroException("Não existe peça na posição de origem escolhida!");

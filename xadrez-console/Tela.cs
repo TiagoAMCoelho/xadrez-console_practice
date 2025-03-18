@@ -149,7 +149,12 @@ namespace xadrez_console
         {
             string s = Console.ReadLine();
             char coluna = s[0];
-            int linha = int.Parse(s[1] + "");
+            int.TryParse(s[1] + "", out int linha);
+
+            if (linha == 0)
+            {
+                throw new TabuleiroException("Posição inválida!");
+            }
 
             return new PosicaoXadrez(coluna, linha);
         }
